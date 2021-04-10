@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.css变量实现进度条</title>
+    <style>
+        :root {
+            /* 首先声明两个css变量,一个用来控制步进 进度条 的宽度  一个用来显示角标的数值 */
+            --progressWidth: 0%;
+            --progressContent: '0%';
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            /* color: #fff; */
+            transition: all 5s;
+        }
+
+        /* 背景板 */
+        .progress {
+            display: block;
+            position: relative;
+            width: 80%;
+            height: 25px;
+            background-color: #ffefc2;
+            border-radius: 100px;
+            margin-top: 100px;
+        }
+
+        .progress::after,
+        .progress::before {
+            /* 都是用绝对定位来确定自身的位置 */
+            position: absolute;
+            border-radius: 100px;
+            /* 过渡效果,让其更丝滑 */
+            transition: all 0.3s;
+        }
+
+        /* 步进进度 */
+        .progress::after {
+            content: '';
+            left: 0;
+            top: 0;
+            /* 这里就用了css变量来控制 */
+            width: var(--progressWidth);
+            /* 限制最小和最大宽度,这样即使程序出现意外,至少进度条不会出现什么问题 */
+            max-width: 100%;
+            min-width: 0%;
+            /* 高度肯定是撑满了 */
+            height: 100%;
+            background-image: linear-gradient(to right, #ffefc2, #f97133);
+        }
+
+        /* 角标数值 */
+        .progress::before {
+            /* 引用定义好的css变量 */
+            content: var(--progressContent);
+            /* 这里使用了calc函数来动态的计算 使用css变量减去自身的宽度就可以了  */
+            left: calc(var(--progressWidth) - 70px);
+            bottom: 150%;
+            height: 100%;
+            width: 70px;
+            background-color: #ffec96;
+            color: #000;
+            font-weight: bold;
+            /* 文字上下垂直居中 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* 让右下角尖锐一点,然后旋转一下元素,让其有一个 `指` 的感觉*/
+            border-bottom-right-radius: 0;
+            /* transform: skewY(15deg); 发现还没有直接旋转元素来得好看 */
+            transform: rotate(20deg);
+        }
+    </style>
+</head>
+
+<body>
+    <h2>~我的天空,星星都亮了~</h2>
+
+    <!-- 
+        只使用一个元素来实现一个进度条
+        为什么用p标签,因为是p开头的 ==
+            主要思路:
+                p标签当作进度条的背景板
+                使用after和before伪类,来实现步进进度条和角标
+                因为伪类是不能使用js来操控的,而css变量是可以操控的,所以我们这里使用css变量
+    -->
+    <p class="progress"></p>
+
+
+    <script>
+        window.onload = function () {
+            const point = 1000;//总量
+            let curr = 0;//步进的量
+            // 通过定时器来模拟效果
+            const timer = setInterval(() => {
+                // 可以通过不同的阶段来控制步进的增量,来模拟一些软件的卡顿效果(迅雷:你直接说我名字得了~)
+                if (curr < 500) {
+                    curr += 50;
+                } else if (curr < 800) {
+                    curr += 20;
+                } else if (curr < 990) {
+                    curr += 5;
+                } else {
+                    curr += 0.1;
+                }
+                // 计算百分比
+                const num = ((curr / point) * 100).toFixed(2);
+                const percent = num + '%';
+                // const percent2 = num / 2 + '%';
+                console.log(num, percent);
+                // 接下来就是直接操控css变量了
+                document.body.style.setProperty('--progressWidth', percent);
+                // document.body.style.setProperty('--progressContent', "'" + percent + "'");
+                document.body.style.setProperty('--progressContent', `'${percent}'`);
+                // document.body.style.backgroundColor = 'hsl(0,' + percent2 + ',50%)';
+                // 判断边界
+                if (curr >= point) {//达到最大值,那么做一些终止操作
+                    timer && clearInterval(timer);
+                    // 将body的背景设置为pink,由于加了过渡效果,所以会有一个天亮的效果
+                    document.body.style.backgroundColor = "pink";
+
+                    // 完毕,再来看下效果~
+
+                }
+            }, 100);
+        }
+    </script>
+</body>
+
+</html>
